@@ -26,10 +26,12 @@ function removeAsset(assetName, then) {
   })
 }
 
+print(`Waiting for requests.`)
+
 bot.on('text', ctx => {
   var temp = ctx.message.text
 
-  if (/[a-zA-Z0-9_-]{11}/g.exec(temp) == null) {
+  if ((temp.length != 11) || (/[a-zA-Z0-9_-]{11}/g.exec(temp) == null)) {
     print(`Invalid input, skipping..`)
     return
   } else if (/;|&|#|\|/g.exec(temp)) {
@@ -55,7 +57,7 @@ bot.on('text', ctx => {
     }
 
     const fileName = (stdout.replace(/\n|'|"|`/g, '')).replace(/[\/\\]/g,' ')
-    const source = `${filesFolder}${fileName}.mp3`
+    const source = `${filesFolder}${fileName}.%(ext)s`
 
     print(`Found: ${fileName}`)
 
