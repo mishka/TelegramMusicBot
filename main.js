@@ -33,25 +33,31 @@ function removeAsset(assetName, then) {
 bot.on('text', ctx => {
   var temp = ctx.message.text
   var match = temp.match(exp)
-  
-  if (match && match[2].length != 11) {
-    print('URL not found in message!')
+
+  if (!match) {
+    print('Match failed')
     return
   }
 
-  const video_id = match[2]
+  const videoId = match[2]
+
+  if (videoId.length != 11) {
+    print('Invalid video ID!')
+    return
+  }
+
   const { message, chat, from } = ctx
-  const { first_name, username } = from
-  const { message_id } = message
-  const { id: chat_id } = chat
+  const { first_name: firstName, username } = from
+  const { message_id: messageId } = message
+  const { id: chatId } = chat
 
-  print(`New request from: ${first_name}, ${username}, R${message_id}`)
-  ctx.replyWithMarkdown('`Processing..`', Extra.inReplyTo(message_id))
+  print(`New request from: ${firstName}, ${username}, R${messageId}`)
+  ctx.replyWithMarkdown('`Processing…`', Extra.inReplyTo(messageId))
 
-  exec(`youtube-dl -e ${yt}${video_id}`, (error, stdout, stderr) => {
+  exec(`youtube-dl -e ${yt}${videoId}`, (_error, stdout, _stderr) => {
     if ((stdout.includes('ERROR')) || (!stdout.trim())) {
-      ctx.telegram.editMessageText(chat_id, message_id + 1, void 0, `*Invalid ID.*`, Extra.markdown())
-      print(`Invalid ID, skipping... R${message_id}`)
+      ctx.telegram.editMessageText(chatId, messageId + 1, void 0, `*Invalid ID.*`, Extra.markdown())
+      print(`Invalid ID, skipping... R${messageId}`)
       return
     }
 
@@ -62,27 +68,27 @@ bot.on('text', ctx => {
 
     let msg = `*Found:* \`${fileName}\`\n*Download started.*`
 
-    ctx.telegram.editMessageText(chat_id, message_id + 1, void 0, msg, Extra.markdown())
+    ctx.telegram.editMessageText(chatId, messageId + 1, void 0, msg, Extra.markdown())
 
-    print(`Downloading... R${message_id}\n`)
+    print(`Downloading... R${messageId}\n`)
 
-    exec(`youtube-dl -x --audio-format mp3 -o "${source}" ${yt}${video_id}`, (_, stdout) => {
-      print(`${stdout}\nDownload complete! Uploading... R${message_id}`)
-      msg += `\n*Uploading…*`
-      
+    exec(`youtube-dl -x --audio-format mp3 -o "${source}" ${yt}${videoId}`, (_, stdout) => {
+      print(`${stdout}\nDownload complete! Uploading... R${messageId}`)
+      msg += '\n*Uploading…*'
+
       const source = `${filesFolder}${fileName}.mp3`
-      ctx.telegram.editMessageText(chat_id, message_id + 1, void 0, msg, Extra.markdown())
+      ctx.telegram.editMessageText(chatId, messageId + 1, void 0, msg, Extra.markdown())
 
-      ctx.telegram.sendAudio(chat_id, { source }).then(() => {
+      ctx.telegram.sendAudio(chatId, { source }).then(() => {
         removeAsset(source, () => {
-          print(`Completed! R${message_id}`)
-          msg += `\n\n*Done!!*`
-          ctx.telegram.editMessageText(chat_id, message_id + 1, void 0, msg, Extra.markdown())
+          print(`Completed! R${messageId}`)
+          msg += '\n\n*Done!!*'
+          ctx.telegram.editMessageText(chatId, messageId + 1, void 0, msg, Extra.markdown())
         })
       }).catch(err => {
         print(err)
         var err_msg = '_Something went wrong while uploading the audio file, maybe try again later?_'
-        ctx.telegram.editMessageText(chat_id, message_id + 1, void 0, err_msg, Extra.markdown())
+        ctx.telegram.editMessageText(chatId, messageId + 1, void 0, err_msg, Extra.markdown())
       })
     })
   })
