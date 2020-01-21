@@ -4,4 +4,4 @@
 
 ## How to
 
-Use the bot by sending the youtube video ID and don't forget to edit the `token`.
+Use the bot by sending the youtube video URL and don't forget to edit the `token` in `main.js`.
