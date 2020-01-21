@@ -3,11 +3,15 @@ const exec = require('child_process').exec;
 const moment = require('moment')
 const Telegraf = require('telegraf')
 const Extra = require('telegraf/extra')
-const Token = ''
+
 const yt = 'https://youtube.com/watch?v='
+const Token = ''
+const exp = /^.*(youtu\.be\/|v\/|u\/\w\/|embed\/|watch\?v=|\&v=)([^#\&\?]*).*/
 
 const bot = new Telegraf(Token)
 const filesFolder = `${process.cwd()}/files/`
+
+print('ONLINE.')
 
 function print(it) {
   console.log(`[${moment().format('h:mm:ss')}] │ ${it}`)
@@ -26,30 +30,25 @@ function removeAsset(assetName, then) {
   })
 }
 
-print(`Waiting for requests.`)
-
 bot.on('text', ctx => {
   var temp = ctx.message.text
-
-  if ((temp.length != 11) || (/[a-zA-Z0-9_-]{11}/g.exec(temp) == null)) {
-    print(`Invalid input, skipping..`)
-    return
-  } else if (/;|&|#|\|/g.exec(temp)) {
-    print(`FORBIDDEN CHARACTERS, SKIPPING! (angery)`)
-    ctx.replyWithMarkdown(`*you shan't pass*`, Extra.inReplyTo(ctx.message.message_id))
+  var match = temp.match(exp)
+  
+  if (match && match[2].length != 11) {
+    print('URL not found in message!')
     return
   }
 
+  const video_id = match[2]
   const { message, chat, from } = ctx
   const { first_name, username } = from
   const { message_id } = message
   const { id: chat_id } = chat
-  const { text: url } = ctx.message
 
   print(`New request from: ${first_name}, ${username}, R${message_id}`)
   ctx.replyWithMarkdown('`Processing..`', Extra.inReplyTo(message_id))
 
-  exec(`youtube-dl -e ${yt}${url}`, (error, stdout, stderr) => {
+  exec(`youtube-dl -e ${yt}${video_id}`, (error, stdout, stderr) => {
     if ((stdout.includes('ERROR')) || (!stdout.trim())) {
       ctx.telegram.editMessageText(chat_id, message_id + 1, void 0, `*Invalid ID.*`, Extra.markdown())
       print(`Invalid ID, skipping... R${message_id}`)
@@ -67,10 +66,11 @@ bot.on('text', ctx => {
 
     print(`Downloading... R${message_id}\n`)
 
-    exec(`youtube-dl -x --audio-format mp3 -o "${source}" ${yt}${url}`, (_, stdout) => {
+    exec(`youtube-dl -x --audio-format mp3 -o "${source}" ${yt}${video_id}`, (_, stdout) => {
       print(`${stdout}\nDownload complete! Uploading... R${message_id}`)
       msg += `\n*Uploading…*`
-
+      
+      const source = `${filesFolder}${fileName}.mp3`
       ctx.telegram.editMessageText(chat_id, message_id + 1, void 0, msg, Extra.markdown())
 
       ctx.telegram.sendAudio(chat_id, { source }).then(() => {
