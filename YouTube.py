@@ -37,20 +37,8 @@ class YouTube:
 
     def extract_url(self, url: str):
         match = self.filter.match(url)
-        if match:
-            vid_id = match.group(2)
-        else:
-            return False
-
-        if vid_id:
-            if len(vid_id) != 11:
-                print('Invalid ID!')
-                return False
-            
-        if vid_id:
-            return f'https://youtube.com/watch?v={vid_id}'
-        else:
-            return False
+        vid_id = match.group(2) if match else False
+        return f'https://youtube.com/watch?v={vid_id}' if vid_id and len(vid_id) == 11 else False
 
 
     def download(self, url: str):
