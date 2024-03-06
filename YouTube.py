@@ -1,15 +1,16 @@
 from os import getcwd
 from os.path import join
+from sys import getsizeof
 
 from io import BytesIO
 from contextlib import redirect_stdout
 from requests import get
 
-import re, subprocess, yt_dlp
+import re, json, subprocess, yt_dlp
 
 
 class YouTube:
-    def __init__(self, update: bool = True):
+    def __init__(self, update: bool = False):
         # try to install/update yt-dlp on each run
         if update:
             try:
@@ -57,6 +58,22 @@ class YouTube:
                     ugh.download([url])
                     return buffer.getvalue()
                 
+                
+    def get_size(self, info):
+        # find the highest opus (audio only) entry and get the filesize
+        max_opus = None
+        max_filesize = 0
+
+        if 'formats' in info and info['formats']:
+            for format_entry in info['formats']:
+                if format_entry.get('acodec') == 'opus' and format_entry.get('filesize'):
+                    filesize = format_entry['filesize']
+                    if filesize > max_filesize:
+                        max_filesize = filesize
+                        max_opus = format_entry
+
+        return (max_opus.get('filesize') / (1024 ** 2)) if max_opus else False
+
 
     def get_info(self, url: str):
         info = self.ydl.extract_info(url, download = False)
@@ -66,8 +83,8 @@ class YouTube:
             'title': info.get('track', info.get('title', None)),
             'artist': info.get('artist', None),
             'thumbnail': info.get('thumbnail', None),
-            'audio': info.get('formats', [{}])[0].get('url', None),
-            'duration': info.get('duration', None)
+            'duration': info.get('duration', None),
+            'filesize': self.get_size(info)
         }
         
         return parsed_info

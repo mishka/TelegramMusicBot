@@ -19,10 +19,17 @@ for message in telegram.poll_updates():
             continue
 
         info = youtube.get_info(url)
+
+        if info['filesize'] > 50:
+            print('Audio exceeds Telegram limit. Won\'t be able to upload.')
+            msg = '*Sorry, Telegram doesn\'t let me upload this file because the size is too high.*\n\n*Try requesting a shorter video!*'
+            telegram.edit_message(chat_id = user, message_id = int(msg_id) + 1, parse_mode = 'Markdown', text = msg)
+            continue
+
         title = info['title']
         
         print(f'Found: {title}\nDownload started!')
-        telegram.edit_message(chat_id = user, message_id = int(msg_id) + 1, parse_mode = 'Markdown', text = f'*Found:* `{title}`\n*Download started!*')
+        telegram.edit_message(chat_id = user, message_id = int(msg_id) + 1, parse_mode = 'Markdown', text = f'*Found:* `{title}`\n\n*Download started!*')
 
         audio = youtube.download(url)
         thumbnail = youtube.download(info['thumbnail'])
