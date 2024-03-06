@@ -2,7 +2,7 @@
 - ffmpeg
   - if you're on windows, download the bin files and place them in the same folder as the script
   - if you're using linux, you can install it with your package manager, and comment out the line: `'ffmpeg_location': join(getcwd(), '')` in `YouTube.py`
-- yt-dlp
+- yt-dlp (will be automatically installed through pip)
 - https://github.com/mishka/TelegramAPI
 
 ## How to use it 
