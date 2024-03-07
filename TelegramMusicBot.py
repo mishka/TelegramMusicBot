@@ -20,11 +20,16 @@ for message in telegram.poll_updates():
 
         info = youtube.get_info(url)
 
+        if info['is_live']:
+            print('Livestream detected. Everyone knows what that means.')
+            telegram.edit_message(chat_id = user, message_id = int(msg_id) + 1, parse_mode = 'Markdown', text = 'Livestreams aren\'t supported sweetie :3')
+            continue
+
         if info['filesize'] and info['filesize'] > 50:
             print('Audio exceeds Telegram limit. Won\'t be able to upload.')
-            msg = '*Sorry, Telegram doesn\'t let me upload this file because the size is too high.*\n\n*Try requesting a shorter video!*'
+            msg = '*Sorry, Telegram doesn\'t let me upload this file because the size is too large ;-;.*\n\n*Try requesting a shorter video!*'
             telegram.edit_message(chat_id = user, message_id = int(msg_id) + 1, parse_mode = 'Markdown', text = msg)
-            continue
+            continue        
 
         title = info['title']
         

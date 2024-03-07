@@ -1,12 +1,11 @@
 from os import getcwd
 from os.path import join
-from sys import getsizeof
 
 from io import BytesIO
 from contextlib import redirect_stdout
 from requests import get
 
-import re, json, subprocess, yt_dlp
+import re, subprocess, yt_dlp
 
 
 class YouTube:
@@ -75,6 +74,11 @@ class YouTube:
         return (max_opus.get('filesize') / (1024 ** 2)) if max_opus else False
 
 
+    def is_livestream(self, info):
+        if info.get('is_live') is not None:
+            return True if info.get('is_live') else False
+        
+
     def get_info(self, url: str):
         info = self.ydl.extract_info(url, download = False)
         # try to get the metadata song title / artist name
@@ -84,7 +88,8 @@ class YouTube:
             'artist': info.get('artist', None),
             'thumbnail': info.get('thumbnail', None),
             'duration': info.get('duration', None),
-            'filesize': self.get_size(info)
+            'filesize': self.get_size(info),
+            'is_live': self.is_livestream(info)
         }
         
         return parsed_info
