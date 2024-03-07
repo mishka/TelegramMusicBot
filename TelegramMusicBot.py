@@ -20,6 +20,9 @@ for message in telegram.poll_updates():
 
         info = youtube.get_info(url)
 
+        if not info:
+            continue
+
         if info['is_live']:
             print('Livestream detected. Everyone knows what that means.')
             telegram.edit_message(chat_id = user, message_id = int(msg_id) + 1, parse_mode = 'Markdown', text = 'Livestreams aren\'t supported sweetie :3')

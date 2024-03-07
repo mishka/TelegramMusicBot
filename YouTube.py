@@ -80,7 +80,10 @@ class YouTube:
         
 
     def get_info(self, url: str):
-        info = self.ydl.extract_info(url, download = False)
+        try:
+            info = self.ydl.extract_info(url, download = False)
+        except: # in case if the video does not exist
+            return False
         # try to get the metadata song title / artist name
         # if they are not available, use the video title / channel name
         parsed_info = {
