@@ -11,7 +11,7 @@ import re, subprocess, yt_dlp
 
 
 class YouTube:
-    def __init__(self, update: bool = False):
+    def __init__(self, update: bool = True):
         # try to install/update yt-dlp on each run
         if update:
             try:
