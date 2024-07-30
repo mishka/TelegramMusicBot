@@ -24,7 +24,7 @@ You can use the bot by sending the YouTube video URLs in the Telegram bot chat.
 - **yt-dlp**
   - My program will automatically download and update to the latest version on every launch.
 - **[TelegramAPI](https://github.com/mishka/TelegramAPI)**
-  - This is my own Telegram API for Python. Compared to all the bloatware libraries out there, it is simple, effective, and fast. :)
+  - This is my own Telegram API library for Python. Compared to all the bloatware libraries out there, it is simple, effective, and fast. :)
   - To use it, just download the files and place the `.py` files into the same folder as this script.
   - I don't have a pip installer for it yet, but I'll create one when I find some free time.
 
