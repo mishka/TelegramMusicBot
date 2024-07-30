@@ -10,6 +10,9 @@
 - **Efficient Query Handling**  
   - Performs regex checks to ensure only valid YouTube links are processed.  
   - Includes robust error handling, ignoring livestreams and files larger than 50MB.
+- **It looks nice! :)**
+  - It will retrieve the song and artist names, along with the thumbnail, and include them when uploading to Telegram.
+  - ![](https://i.imgur.com/9RAHcq8.jpeg)
 
 ## Usage
 You can use the bot by sending the YouTube video URLs in the Telegram bot chat.
