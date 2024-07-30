@@ -1,5 +1,7 @@
 from os import getcwd
-from os.path import join
+from os.path import join, isfile
+from shutil import which
+from platform import system
 
 from io import BytesIO
 from contextlib import redirect_stdout
@@ -27,9 +29,20 @@ class YouTube:
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
                 'preferredquality': '192'
-            }],
-            'ffmpeg_location': join(getcwd(), '')
+            }]
         }
+        
+        # Check if the platform is Windows
+        if system() == 'Windows':
+            ffmpeg_executable = join(getcwd(), '')
+            if isfile(ffmpeg_executable):
+                self.options['ffmpeg_location'] = join(getcwd(), '')
+            elif which('ffmpeg') is None:
+                raise SystemExit("FFmpeg is required but not found. Exiting.")
+        else:
+            # For macOS and Linux, check if ffmpeg is available globally
+            if which('ffmpeg') is None:
+                raise SystemExit("FFmpeg is required but not found. Exiting.")
 
         self.ydl = yt_dlp.YoutubeDL(self.options)
         self.filter = re.compile(r'^.*(youtu\.be/|v/|u/\w/|embed/|watch\?v=|\&v=)([^#\&\?]*).*')
