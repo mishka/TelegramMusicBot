@@ -12,7 +12,7 @@
   - Includes robust error handling, ignoring livestreams and files larger than 50MB.
 
 ## Usage
-You can use the bot by sending the youtube video URLs in the Telegram bot chat.
+You can use the bot by sending the YouTube video URLs in the Telegram bot chat.
 
 # Requirements
 - **Don't forget to replace the `token` in `TelegramMusicBot.py` with your Telegram bot token.**
