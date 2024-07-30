@@ -27,3 +27,8 @@ You can use the bot by sending the youtube video URLs in the Telegram bot chat.
   - This is my own Telegram API for Python. Compared to all the bloatware libraries out there, it is simple, effective, and fast. :)
   - To use it, just download the files and place the `.py` files into the same folder as this script.
   - I don't have a pip installer for it yet, but I'll create one when I find some free time.
+
+## Note on the `old` Folder
+Please ignore the `old` folder. It contains the ancestor bot I initially created as a JavaScript practice project. Due to dependency rewrites and updates, the project eventually stopped working, and I didn't get around to fixing it.
+
+I started from scratch and built a new version of the tool, inspired by this old project. Although it no longer functions, I've kept it in the repository for sentimental reasons. It served as a valuable learning experience and inspiration for the tool I've developed today, so I'll let it remain a testament to that journey.
