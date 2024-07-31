@@ -18,7 +18,8 @@
 You can use the bot by sending the YouTube video URLs in the Telegram bot chat.
 
 # Requirements
-- **Don't forget to replace the `token` in `TelegramMusicBot.py` with your Telegram bot token.**
+  - **Don't forget set an env variable with your Telegram bot token.**
+  - **TELEGRAM_TOKEN="<my_token_here>"**
   - If you haven't created a bot on Telegram before, you can simply message [BotFather](https://t.me/botfather) and type `/newbot`.
   - Follow the steps to complete your bot configuration. Upon completion, you will receive a bot token.
 - **FFmpeg**
