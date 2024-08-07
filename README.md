@@ -9,7 +9,7 @@
   - Benefits from faster read/write speeds by using RAM.
 - **Efficient Query Handling**  
   - Performs regex checks to ensure only valid YouTube links are processed.  
-  - Includes robust error handling, ignoring livestreams and files larger than 50MB.
+  - Includes robust error handling, ignoring livestreams and files larger than 50MB (Telegram upload limit).
 - **It looks nice! :)**
   - It will retrieve the song and artist names, along with the thumbnail, and include them when uploading to Telegram.
   - ![](https://i.imgur.com/9RAHcq8.jpeg)
