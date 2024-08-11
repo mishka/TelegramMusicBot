@@ -1,6 +1,6 @@
 ## Features
 - **Exceptional Speed**  
-  - Uploads music files in approximately 3-5 seconds on average.  
+  - Processes a query and uploads it back as a music file in approximately 3-5 seconds on average.  
   - I host it on a Raspberry Pi 4 with a LAN connection supporting up to 70Mbps download and 10Mbps upload speeds.
 - **Memory-Only Operation**  
   - Downloads and processes data entirely in memory, without writing to disk.  
