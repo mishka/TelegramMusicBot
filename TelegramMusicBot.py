@@ -1,11 +1,15 @@
+import os
+
 from TelegramAPI import TelegramAPI
 from YouTube import YouTube
 
 
 while True:
+    telegram_token = os.getenv('TELEGRAM_TOKEN')
+
     try:
         youtube = YouTube()
-        telegram = TelegramAPI('token')
+        telegram = TelegramAPI(telegram_token)
     except Exception as e:
         print(f'Error occured: {e}. Retrying...')
         continue
