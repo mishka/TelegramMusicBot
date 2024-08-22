@@ -34,7 +34,7 @@ You can use the bot by sending the YouTube video URLs in the Telegram bot chat.
 
 # It's Available as a Docker
 
-You can also run this project as a Docker container. Simply visit the [Docker Hub page]((https://hub.docker.com/r/wrvc96/musicbot)) for more details. A good friend of mine has compiled the image for both arm64 and x86 architectures.
+You can also run this project as a Docker container. Simply visit the [Docker Hub page](https://hub.docker.com/r/wrvc96/musicbot) for more details. A good friend of mine has compiled the image for both arm64 and x86 architectures.
 
 ## Note on the `old` Folder
 Please ignore the `old` folder. It contains the ancestor bot I initially created as a JavaScript practice project. Due to dependency rewrites and updates, the project eventually stopped working, and I didn't get around to fixing it.
