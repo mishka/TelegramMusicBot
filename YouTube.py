@@ -38,38 +38,48 @@ class YouTube:
             if isfile(ffmpeg_executable):
                 self.options['ffmpeg_location'] = join(getcwd(), '')
             elif which('ffmpeg') is None:
-                raise SystemExit("FFmpeg is required but not found. Exiting.")
+                raise SystemExit('FFmpeg is required but not found. Exiting.')
         else:
             # For macOS and Linux, check if ffmpeg is available globally
             if which('ffmpeg') is None:
-                raise SystemExit("FFmpeg is required but not found. Exiting.")
+                raise SystemExit('FFmpeg is required but not found. Exiting.')
 
         self.ydl = yt_dlp.YoutubeDL(self.options)
         self.filter = re.compile(r'^.*(youtu\.be/|v/|u/\w/|embed/|watch\?v=|\&v=)([^#\&\?]*).*')
 
 
     def extract_url(self, url: str):
-        match = self.filter.match(url)
-        vid_id = match.group(2) if match else False
-        return f'https://youtube.com/watch?v={vid_id}' if vid_id and len(vid_id) == 11 else False
+        try:
+            match = self.filter.match(url)
+            vid_id = match.group(2) if match else None
+            if vid_id and len(vid_id) == 11:
+                return f'https://youtube.com/watch?v={vid_id}'
+            return False
+        except Exception as e:
+            print(f'Error extracting URL: {e}')
+            return False
 
 
     def download(self, url: str):
-        if 'maxresdefault' in url:
-            with BytesIO() as buffer:
-                r = get(url)
-                if r.status_code == 200:
-                    buffer.write(r.content)
-                    return buffer.getvalue()
-                else:
-                    print(f'Failed to download thumbnail: {r.status_code}')
-                    return None
-        else:
-            with BytesIO() as buffer:
-                with redirect_stdout(buffer), self.ydl as ugh:
-                    ugh.download([url])
-                    return buffer.getvalue()
-                
+        try:
+            if 'maxresdefault' in url:
+                with BytesIO() as buffer:
+                    r = get(url)
+                    if r.status_code == 200:
+                        buffer.write(r.content)
+                        return buffer.getvalue()
+                    else:
+                        print(f'Failed to download thumbnail: {r.status_code}')
+                        return None
+            else:
+                with BytesIO() as buffer:
+                    with redirect_stdout(buffer), self.ydl as ugh:
+                        ugh.download([url])
+                        return buffer.getvalue()
+        except Exception as e:
+            print(f'Download error: {e}')
+            return None
+                    
                 
     def get_size(self, info):
         # find the highest opus (audio only) entry and get the filesize
@@ -88,14 +98,14 @@ class YouTube:
 
 
     def is_livestream(self, info):
-        if info.get('is_live') is not None:
-            return True if info.get('is_live') else False
+        return bool(info.get('is_live'))
         
 
     def get_info(self, url: str):
         try:
             info = self.ydl.extract_info(url, download = False)
-        except: # in case if the video does not exist
+        except Exception as e: # in case if the video does not exist
+            print(f'Failed to extract video info: {e}')
             return False
         # try to get the metadata song title / artist name
         # if they are not available, use the video title / channel name
