@@ -16,7 +16,12 @@
 
 ## Usage
 You can use the bot by sending the YouTube video URLs in the Telegram bot chat.
-
+```py
+# You can import, set it up, and run it in 3 lines.
+from TelegramMusicBot import MusicBot
+bot = MusicBot(update_ytdlp = True, telegram_token = 'Enter Your Token Here!')
+bot.run()
+```
 # Requirements
 - **Don't forget to replace the `token` in `TelegramMusicBot.py` with your Telegram bot token.**
   - If you haven't created a bot on Telegram before, you can simply message [BotFather](https://t.me/botfather) and type `/newbot`.
