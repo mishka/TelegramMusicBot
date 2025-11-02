@@ -1,5 +1,5 @@
 from queue import Queue
-from threading import Thread, Event
+from threading import Thread
 from datetime import datetime
 from TelegramAPI import TelegramAPI
 from YouTube import YouTube
@@ -16,48 +16,61 @@ class Responses:
     @staticmethod
     def found(title, artist = None):
         if artist:
-            return f'*Downloading:* `{title}` - {artist}`'
+            return f'*Downloading:* `{title} - {artist}`'
         return f'*Downloading:* `{title}`'
+
 
 class MusicBot:
     def __init__(self, update_ytdlp : bool, telegram_token : str):
         self.log('Starting the bot...')
         self.task_queue = Queue()
-        self.stop_event = Event()
+        self.running = True
 
         try:
-            self.youtube = YouTube(update_ytdlp)
             self.telegram = TelegramAPI(telegram_token)
+            self.youtube = YouTube(update = update_ytdlp)
         except Exception as e:
             self.log(f'Error setting up YouTube/Telegram: {e}')
 
-        self.worker_thread = Thread(target = self.worker)
+        # Single worker thread for sequential processing
+        self.worker_thread = Thread(target = self.worker, daemon=True)
         self.worker_thread.start()
 
-    def log(self, message : str):
+    def log(self, message):
         timestamp = datetime.now().strftime('%d/%m/%Y %H:%M:%S')
-        print(f'[{timestamp}] - {message}')
+        print(f'[{timestamp}] - {str(message)}')
 
     def run(self):
-        while not self.stop_event.is_set():
-            try:
-                updates = self.telegram.poll_updates()
-                for message in updates:
-                    self.log(f'Adding to the queue --> {message.from_first_name} | @{message.from_username} | {message.from_id} | {str(message.text)}')
-                    self.task_queue.put(message)
-            except Exception as e:
-                self.log(f'Error in main loop: {e}')
+        updates = self.telegram.poll_updates()
+        for message in updates:
+            self.log(f'Adding to the queue --> {message.from_first_name} | @{message.from_username} | {message.from_id} | {str(message.text)}')
+            self.task_queue.put(message)
 
     def worker(self):
-        while not self.stop_event.is_set():
+        """
+        Single worker thread that processes messages one at a time.
+        This ensures no concurrent Telegram API requests because Telegram API doesn't like that.
+        """
+        while self.running:
             try:
-                message = self.task_queue.get()
+                # Wait for a message from the queue (blocking)
+                message = self.task_queue.get(timeout=1)
+                
+                # Process the message completely before moving to the next one
                 self.process_message(message)
+                
+                # Mark task as done
                 self.task_queue.task_done()
-            except Exception as e:
-                self.log(f'Error in worker: {e}')
+            except:
+                # Timeout or empty queue, continue loop
+                continue
 
     def process_message(self, message):
+        """
+        Process a single message from start to finish.
+        Includes: validation, downloading, converting, and uploading.
+        All steps are sequential to avoid concurrent Telegram API calls.
+        """
         chat_id = message.chat_id
         msg_id = message.message_id
 
@@ -75,86 +88,95 @@ class MusicBot:
         )
         own_response = bot_response.message_id
 
-        try:
-            url = self.youtube.extract_url(message.text)
-            if not url:
-                self.log(Responses.invalid_url)
-                self.handle_error(chat_id, own_response, Responses.invalid_url)
-                return
-
-            info = self.youtube.get_info(url)
-
-            if info['is_live']:
-                self.log(Responses.livestream)
-                self.handle_error(chat_id, own_response, Responses.livestream)
-                return
-
-            if info['filesize'] and info['filesize'] > 50:
-                self.log(Responses.large_file)
-                self.handle_error(chat_id, own_response, Responses.large_file)
-                return
-
-            title = info['title']
-            artist = info['artist']
-            self.log(f'Downloading: {title} - {artist}')
+        # Extract and validate URL
+        url = self.youtube.extract_url(message.text)
+        
+        if not url:
+            self.log(Responses.invalid_url)
             self.telegram.edit_message(
                 chat_id = chat_id,
                 message_id = own_response,
                 parse_mode = 'Markdown',
-                text = Responses.found(title, artist)
+                text = Responses.invalid_url
             )
+            return
 
-            audio = self.youtube.download(url)
-            thumbnail = self.youtube.download(info['thumbnail'])
+        # Get video info
+        info = self.youtube.get_info(url)
 
-            self.log('Uploading...')
+        if info['is_live']:
+            self.log(Responses.livestream)
             self.telegram.edit_message(
                 chat_id = chat_id,
                 message_id = own_response,
                 parse_mode = 'Markdown',
-                text = Responses.uploading
+                text = Responses.livestream
             )
+            return
 
-            self.upload_audio(chat_id, msg_id, own_response, audio, thumbnail, info)
-        except Exception as e:
-            self.log(f'Error processing message: {e}')
-            self.log(Responses.error)
-            self.handle_error(chat_id, own_response, Responses.error)
+        if info['filesize'] and info['filesize'] > 50:
+            self.log(Responses.large_file)
+            self.telegram.edit_message(
+                chat_id = chat_id,
+                message_id = own_response,
+                parse_mode = 'Markdown',
+                text = Responses.large_file
+            )
+            return
 
-    def handle_error(self, chat_id : int, message_id : int, error_text : str):
+        self.log(Responses.found(info["title"], info["artist"]))
         self.telegram.edit_message(
             chat_id = chat_id,
-            message_id = message_id,
+            message_id = own_response,
             parse_mode = 'Markdown',
-            text = error_text,
+            text = Responses.found(info['title'], info['artist'])
         )
 
-    def upload_audio(self, chat_id : int, msg_id : int, own_response : int, audio, thumbnail, info):
-        try:
-            self.telegram.send_audio(
-                byte = True,
-                audio = audio,
-                title = info['title'],
+        audio = self.youtube.download(url)
+        
+        if not audio:
+            self.log('Download failed!')
+            self.telegram.edit_message(
                 chat_id = chat_id,
-                thumbnail = thumbnail,
-                performer = info['artist'],
-                duration = info['duration'],
-                reply_to_message_id = msg_id
+                message_id = own_response,
+                parse_mode = 'Markdown',
+                text = Responses.upload_error
             )
-            self.telegram.delete_message(chat_id = chat_id, message_id = own_response)
-        except Exception as e:
-            self.log(f'Error uploading audio: {e}')
-            self.log(Responses.upload_error)
-            self.handle_error(chat_id, own_response, Responses.upload_error)
+            return
+        
+        thumbnail = self.youtube.download(info['thumbnail'])
 
-    def stop(self):
-        self.stop_event.set()
-        self.worker_thread.join()
+        self.log('Uploading...')
+        self.telegram.edit_message(
+            chat_id = chat_id,
+            message_id = own_response,
+            parse_mode = 'Markdown',
+            text = Responses.uploading
+        )
 
-        while not self.stop_event.is_set():
-            try:
-                message = self.task_queue.get(timeout=1)
-                self.process_message(message)
-                self.task_queue.task_done()
-            except Exception as e:
-                self.log(f'Error in worker: {e}')
+        self.telegram.send_audio(
+            byte = True,
+            audio = audio,
+            title = info['title'],
+            chat_id = chat_id,
+            thumbnail = thumbnail,
+            performer = info['artist'],
+            duration = info['duration'],
+            reply_to_message_id = msg_id
+        )
+        
+        self.telegram.delete_message(chat_id = chat_id, message_id = own_response)
+        
+        self.log(f'Completed processing for {message.from_first_name}')
+
+
+if __name__ == '__main__':
+    musicbot = MusicBot(update_ytdlp = True, telegram_token = '')
+    
+    # Continuously poll for updates
+    try:
+        while True:
+            musicbot.run()
+    except KeyboardInterrupt:
+        musicbot.log('Bot stopped by user.')
+        musicbot.running = False
